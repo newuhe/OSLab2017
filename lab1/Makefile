@@ -8,7 +8,7 @@ clean:
 	cd app; make clean
 	rm -f os.img
 
-play:
+play:os.img
 	qemu-system-i386 os.img
 
 debug:

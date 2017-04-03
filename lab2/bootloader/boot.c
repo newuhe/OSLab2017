@@ -3,21 +3,14 @@
 #define SECTSIZE 512
 
 void bootMain(void) {
-	void (*elf)(void);
-	// loading sector 1 to memory
-
-	unsigned int entry_addr = 0x8c00;
-	readSect((void*)entry_addr, 1);
-
-	elf = (void*)entry_addr;
-	elf();
+	/* 加载内核至内存，并跳转执行 */
 }
 
 void waitDisk(void) { // waiting for disk
 	while((inByte(0x1F7) & 0xC0) != 0x40);
 }
 
-void readSect(void *dst, int offset) { // reading one sector of disk
+void readSect(void *dst, int offset) { // reading a sector of disk
 	int i;
 	waitDisk();
 	outByte(0x1F2, 1);
