@@ -4,13 +4,6 @@
 SegDesc gdt[NR_SEGMENTS];
 TSS tss;
 
-void asm_print(int row, int col, char c) {
-	asm ("movl %0, %%edi;"			: :"r"(((80 * row + col) * 2))  :"%edi"); // 写在屏幕的第5行第0列
-	asm ("movw %0, %%eax;"			: :"r"(0x0c00 | c) 				:"%eax"); // 0x0黑底,0xc红字,字母ASCII码
-	asm ("movw %%ax, %%gs:(%%edi);" : : 							:"%edi"); // 写入显存
-	while(1);
-}
-
 #define SECTSIZE 512
 
 void waitDisk(void) {

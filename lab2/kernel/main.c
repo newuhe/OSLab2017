@@ -13,7 +13,6 @@ void kEntry(void) {
 	initSeg(); // initialize gdt, tss
 
 	// asm_print(5, 1, 'x');
-
 	loadUMain(); // load user program, enter user space
 
 	while(1);

@@ -1,6 +1,7 @@
 #include "x86.h"
 #include "device.h"
 
+
 void syscallHandle(struct TrapFrame *tf);
 
 void GProtectFaultHandle(struct TrapFrame *tf);
@@ -26,6 +27,9 @@ void irqHandle(struct TrapFrame *tf) {
 
 void syscallHandle(struct TrapFrame *tf) {
 	/* 实现系统调用*/
+	putChar(tf->eax);
+	static int col = 1;
+	asm_print(5, col++, tf->eax);
 }
 
 void GProtectFaultHandle(struct TrapFrame *tf){

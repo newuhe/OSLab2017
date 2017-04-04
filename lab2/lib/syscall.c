@@ -10,12 +10,14 @@ int32_t syscall(int num, uint32_t a1,uint32_t a2,
 	int32_t ret = 0;
 
 	/* 内嵌汇编 保存 num, a1, a2, a3, a4, a5 至通用寄存器*/
+	asm volatile("int $0x80": "=a"(ret) : "a"(a1), "b"(a2), "c"(a3), "d"(a4));
 
-	asm volatile("int $0x80");
-		
 	return ret;
 }
 
 void printf(const char *format,...){
-
+	format = "11123aaaaaaaaaaaaaaa";
+	for (int i = 0; format[i] != '\0'; i++) {
+		syscall(0, format[i], 0,0,0,0);
+	}
 }
