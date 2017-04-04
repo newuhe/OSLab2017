@@ -34,23 +34,25 @@ void bootMain(void) {
 	ph = (struct ProgramHeader *)(buf + elf->phoff);
 	int i;
 	for(i = 0; i < 2; ++i) {
-	/* Scan the program header table, load each segment into memory */
-		/* read the content of the segment from the ELF file
-		 * to the memory region [VirtAddr, VirtAddr + FileSiz)
-		 */
-		unsigned int p = ph->vaddr, q = ph->off;
-		while (q < ph->vaddr + ph->memsz) {
-			*(unsigned char*)p = *(unsigned char*)(buf+q);
-			q++;
-			p++;
-		}
-		/* zero the memory region [VirtAddr + FileSiz, VirtAddr + MemSiz) */
-/*
-		while (q < ph->memsz) {
-			*(unsigned char*)p = 0;
-			q++;
-			p++;
-		}*/
+		/* Scan the program header table, load each segment into memory */
+			/* read the content of the segment from the ELF file
+			 * to the memory region [VirtAddr, VirtAddr + FileSiz)
+			 */
+		//if (ph->type == 1) {
+			unsigned int p = ph->vaddr, q = ph->off;
+			while (q < ph->vaddr + ph->filesz) {
+				*(unsigned char*)p = *(unsigned char*)(buf + q);
+				q++;
+				p++;
+			}
+
+			/* zero the memory region [VirtAddr + FileSiz, VirtAddr + MemSiz) */
+			while (q < ph->vaddr + ph->memsz) {
+				*(unsigned char*)p = 0;
+				q++;
+				p++;
+			}
+		//}
 
 		ph++;
 	}

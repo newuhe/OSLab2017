@@ -1,7 +1,15 @@
 #include "lib.h"
 #include "types.h"
 
+void asm_print(int row, int col, char c) {
+	asm ("movl %0, %%edi;"			: :"r"(((80 * row + col) * 2))  :"%edi"); // 写在屏幕的第5行第0列
+	asm ("movw %0, %%eax;"			: :"r"(0x0c00 | c) 				:"%eax"); // 0x0黑底,0xc红字,字母ASCII码
+	asm ("movw %%ax, %%gs:(%%edi);" : : 							:"%edi"); // 写入显存
+	while(1);
+}
+
 int uEntry(void) {
+	asm_print(5, 1, 'x');
 
 	printf("printf test begin...\n");
 	printf("the answer should be:\n");
@@ -24,7 +32,7 @@ int uEntry(void) {
 	printf("%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
 	printf("=======================================================\n");
 	printf("Test end!!! Good luck!!!\n");
-	
+
 	while(1);
 	return 0;
 }

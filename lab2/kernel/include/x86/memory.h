@@ -23,6 +23,7 @@
 #define SEG_UCODE   3           // User code
 #define SEG_UDATA   4           // User data/stack
 #define SEG_TSS     5           // Global unique task state segement
+#define SEG_VIDEO   6           // video segement
 
 // Selectors
 #define KSEL(desc) (((desc) << 3) | DPL_KERN)
