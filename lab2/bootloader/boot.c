@@ -4,6 +4,7 @@
 
 void bootMain(void) {
 	/* 加载内核至内存，并跳转执行 */
+	while (1);
 }
 
 void waitDisk(void) { // waiting for disk

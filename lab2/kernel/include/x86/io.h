@@ -1,5 +1,8 @@
 #ifndef __X86_IO_H__
 #define __X86_IO_H__
+
+#include <common.h>
+
 /* ELF32二进制文件头 */
 struct ELFHeader {
 	unsigned int   magic;
