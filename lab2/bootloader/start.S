@@ -1,5 +1,3 @@
-#include "asm.h"
-
 .code16
 .global start
 start:
@@ -17,18 +15,13 @@ start:
 start32:
 	# 初始化DS ES FS GS SS 初始化栈顶指针ESP
 	# Set up the protected-mode data segment registers
-	movw    $GDT_ENTRY(2), %ax
+	movw    $(2 << 3), %ax
 	movw    %ax, %ds          # %DS = %AX
 	movw    %ax, %es          # %ES = %AX
 	movw    %ax, %ss          # %SS = %AX
 	movw    %ax, %fs          # %FS = %AX
-	movw    $GDT_ENTRY(3), %ax
+	movw    $(3 << 3), %ax
 	movw    %ax, %gs          # %GS = %AX
-
-	movl    $((80 * 5 + 0) * 2), %edi   # 写在屏幕的第5行第0列
-	movb    $0x0c, %ah                  # 0x0黑底,0xc红字
-	movb    $72, %al                    # 72是字母"H"的ASCII码
-	movw    %ax, %gs:(%edi)             # 写入显存
 
 	jmp bootMain                    # 跳转至bootMain函数 定义于boot.c
 
@@ -37,11 +30,20 @@ gdt: # 8 bytes for each table entry, at least 1 entry
 	.word 0,0 # empty entry
 	.byte 0,0,0,0
 
-	.word 0xffff,0                  # 代码段描述符
+	.word 0xffff,0                  # kernel code descriptor
 	.byte 0,0x9a,0xcf,0
 
-	.word 0xffff,0                  # 数据段描述符
+	.word 0xffff,0                  # kernel data descriptor
 	.byte 0,0x92,0xcf,0
+
+#	.word 0xffff,0                  # user code descriptor
+#	.byte 0,0xfa,0xcf,0
+#	#     0,0x9a,0xcf,0
+#	.word 0xffff,0                  # user data descriptor
+#	.byte 0,0xf2,0xcf,0
+#
+#	.word 0xffff,0                  # TSS descriptor
+#	.byte 0,0x92,0xcf,0
 
 	.word 0xffff,0x8000             # 视频段描述符
 	.byte 0x0b,0x92,0xcf,0

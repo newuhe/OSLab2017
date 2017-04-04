@@ -1,8 +1,8 @@
 #include "x86.h"
 #include "device.h"
 
-#define INTERRUPT_GATE_32   0xE
-#define TRAP_GATE_32        0xF
+#define INTERRUPT_GATE_32   0xE // 1110
+#define TRAP_GATE_32        0xF // 1111
 
 /* IDT表的内容 */
 struct GateDescriptor idt[NR_IRQ]; // NR_IRQ=256, defined in x86/cpu.h
@@ -46,9 +46,9 @@ void initIdt() {
 	 * init your idt here
 	 * 初始化 IDT 表, 为中断设置中断处理函数
 	 */
-	
+
 	setTrap(idt + 0xd, SEG_KCODE, (uint32_t)irqGProtectFault, DPL_KERN);
-	
+
 	setIntr(idt + 0x80, SEG_KCODE, (uint32_t)irqSyscall, DPL_USER); // for int 0x80, interrupt vector is 0x80, Interruption is disabled
 
 	/* 写入IDT */
