@@ -2,9 +2,8 @@
 #include "types.h"
 
 int uEntry(void) {
-	printf("11123");
+	printf("%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
 	while(1);
-
 	printf("printf test begin...\n");
 	printf("the answer should be:\n");
 	printf("#######################################################\n");

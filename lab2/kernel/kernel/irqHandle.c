@@ -1,6 +1,7 @@
 #include "x86.h"
 #include "device.h"
 
+#define	SYS_write	4 // defined in <sys/syscall.h>
 
 void syscallHandle(struct TrapFrame *tf);
 
@@ -11,7 +12,6 @@ void irqHandle(struct TrapFrame *tf) {
 	 * 中断处理程序
 	 */
 	/* Reassign segment register */
-
 	switch(tf->irq) {
 		case -1:
 			break;
@@ -25,14 +25,39 @@ void irqHandle(struct TrapFrame *tf) {
 	}
 }
 
+void sys_write(struct TrapFrame *tf) {
+	static int row = 8, col = 1;
+	char c = '\0';
+
+	// ebx:file-descriptor, ecx:str, edx:len
+	if (tf->ebx == 1 || tf->ebx == 2) { // stdout & stderr
+		int i;
+		for(i = 0; i < tf->edx; i++) {
+			c = *(char *)(tf->ecx + i);
+			putChar(c);
+			if (c == '\n') {
+				row++;
+				col = 1;
+				continue;
+			}
+			asm_print(row, col++, c);
+		}
+		tf->eax = tf->edx; // return value
+	}
+	else { // other file descriptor
+		panic("sys_write not implemented");
+	}
+}
+
 void syscallHandle(struct TrapFrame *tf) {
 	/* 实现系统调用*/
-	putChar(tf->eax);
-	static int col = 1;
-	asm_print(5, col++, tf->eax);
+	switch(tf->eax) {
+		case SYS_write: sys_write(tf); break;
+		default: panic("syscal not implemented");
+	}
 }
 
 void GProtectFaultHandle(struct TrapFrame *tf){
-	assert(0);
+	panic("GProtect Fault");
 	return;
 }

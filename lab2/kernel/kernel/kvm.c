@@ -40,7 +40,8 @@ void initSeg() {
 	/*
 	 * 初始化TSS
 	 */
-	asm volatile("movl %%esp, %0": "=r"(tss.esp0));
+	//asm volatile("movl %%esp, %0": "=r"(tss.esp0));
+	tss.esp0 = 0x200000;
 	tss.ss0 = KSEL(SEG_KDATA);
 	asm volatile("ltr %%ax":: "a" (KSEL(SEG_TSS)));
 
@@ -64,7 +65,7 @@ void enterUserSpace(uint32_t entry) {
 	 */
 
 	asm volatile("pushl %0"::"r"(USEL(SEG_UDATA)));			// %ss
-	asm volatile("pushl %0"::"r"(0x128 << 20));			// %esp
+	asm volatile("pushl %0"::"r"(0x40 << 20));			// %esp
 	asm volatile("pushfl");		// %eflags
 	asm volatile("pushl %0"::"r"(USEL(SEG_UCODE)));			// %cs
 	asm volatile("pushl %0"::"r"(entry));			// %eip
