@@ -26,7 +26,7 @@ void irqHandle(struct TrapFrame *tf) {
 }
 
 void sys_write(struct TrapFrame *tf) {
-	static int row = 8, col = 1;
+	static int row = 4, col = 1;
 	char c = '\0';
 
 	// ebx:file-descriptor, ecx:str, edx:len
@@ -40,7 +40,11 @@ void sys_write(struct TrapFrame *tf) {
 				col = 1;
 				continue;
 			}
-			asm_print(row, col++, c);
+			if (col == 80) {
+				row++;
+				col = 1;
+			}
+			video_print(row, col++, c);
 		}
 		tf->eax = tf->edx; // return value
 	}

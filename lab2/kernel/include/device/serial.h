@@ -3,7 +3,7 @@
 
 void initSerial(void);
 void putChar(char);
-void asm_print(int row, int col, char c);
+void video_print(int row, int col, char c);
 
 #define SERIAL_PORT  0x3F8
 

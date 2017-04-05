@@ -29,32 +29,49 @@ void prints(const char* str) {
     syscall(SYS_write, 1, (uint32_t)str, strsz);
 }
 
-void printd(unsigned int d, int base) {
+void printd(int d) {
     char buf[100];
     int strsz = 0;
     if (d == 0) {
-        printc('0');
+        prints("0");
         return;
     }
     if (d == 0x80000000) {
-        if (base == 10)
-            prints("-2147483648");
-        else
-            prints("80000000");
+        prints("-2147483648");
         return;
     }
-    if (d < 0 && base == 10) {
+    if (d < 0) {
+        prints("-");
         d = -d;
-        printc('-');
     }
     while (d) {
-        if (d % base >= 10) {
-            buf[strsz++] = d % base - 10 + 'a';
+        buf[strsz++] = d % 10 + '0';
+        d /= 10;
+    }
+    for (int i = 0, j = strsz - 1; i < j; i++, j--) {
+        char tmp = buf[i];
+        buf[i] = buf[j];
+        buf[j] = tmp;
+    }
+    syscall(SYS_write, 1, (uint32_t)buf, strsz);
+}
+
+void printx(unsigned int d) {
+    char buf[100];
+    int strsz = 0;
+    if (d == 0) {
+        prints("0");
+        return;
+    }
+    while (d) {
+        if (d % 16 >= 10) {
+            buf[strsz] = d % 16 - 10 + 'a';
         }
         else {
-            buf[strsz++] = d % base + '0';
+            buf[strsz] = d % 16 + '0';
         }
-        d /= base;
+        d /= 16;
+        strsz++;
     }
     for (int i = 0, j = strsz - 1; i < j; i++, j--) {
         char tmp = buf[i];
@@ -75,10 +92,10 @@ void printf(const char *str, ...)
     	if(*str == '%') {
     	    token = *++str;
     	    switch (token) {
-                case 'd': printd(va_arg(ap, int), 10);   break;
+                case 'd': printd(va_arg(ap, int));   break;
                 case 's': prints(va_arg(ap, char*)); break;
                 case 'c': printc(va_arg(ap, int));  break;
-                case 'x': printd(va_arg(ap, int), 16);  break;
+                case 'x': printx(va_arg(ap, int));  break;
     	    }
     	}
     	else {
