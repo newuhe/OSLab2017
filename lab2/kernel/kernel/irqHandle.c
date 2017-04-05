@@ -26,9 +26,8 @@ void irqHandle(struct TrapFrame *tf) {
 }
 
 void sys_write(struct TrapFrame *tf) {
-	static int row = 4, col = 1;
+	static int row = 0, col = 0;
 	char c = '\0';
-
 	// ebx:file-descriptor, ecx:str, edx:len
 	if (tf->ebx == 1 || tf->ebx == 2) { // stdout & stderr
 		int i;
@@ -37,12 +36,12 @@ void sys_write(struct TrapFrame *tf) {
 			putChar(c);
 			if (c == '\n') {
 				row++;
-				col = 1;
+				col = 0;
 				continue;
 			}
 			if (col == 80) {
 				row++;
-				col = 1;
+				col = 0;
 			}
 			video_print(row, col++, c);
 		}
@@ -57,6 +56,9 @@ void syscallHandle(struct TrapFrame *tf) {
 	/* 实现系统调用*/
 	switch(tf->eax) {
 		case SYS_write: sys_write(tf); break;
+		/**
+		 * TODO: add more syscall
+		 */
 		default: panic("syscal not implemented");
 	}
 }

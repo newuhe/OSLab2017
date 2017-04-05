@@ -35,14 +35,14 @@ void bootMain(void) {
 			 * to the memory region [VirtAddr, VirtAddr + FileSiz)
 			 */
 			unsigned int p = ph->vaddr, q = ph->off;
-			while (q < ph->vaddr + ph->filesz) {
+			while (p < ph->vaddr + ph->filesz) {
 				*(unsigned char*)p = *(unsigned char*)(buf + q);
 				q++;
 				p++;
 			}
 
 			/* zero the memory region [VirtAddr + FileSiz, VirtAddr + MemSiz) */
-			while (q < ph->vaddr + ph->memsz) {
+			while (p < ph->vaddr + ph->memsz) {
 				*(unsigned char*)p = 0;
 				q++;
 				p++;

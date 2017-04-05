@@ -17,11 +17,13 @@ int32_t syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx)
 	return ret;
 }
 
+/* print one character */
 void printc(char c) {
     syscall(SYS_write, 1, (uint32_t)&c, 1);
     return;
 }
 
+/* print c-string */
 void prints(const char* str) {
     int strsz = 0;
     while (str[strsz] != '\0')
@@ -29,6 +31,7 @@ void prints(const char* str) {
     syscall(SYS_write, 1, (uint32_t)str, strsz);
 }
 
+/* print decimal */
 void printd(int d) {
     char buf[100];
     int strsz = 0;
@@ -53,9 +56,11 @@ void printd(int d) {
         buf[i] = buf[j];
         buf[j] = tmp;
     }
-    syscall(SYS_write, 1, (uint32_t)buf, strsz);
+	buf[strsz] = '\0';
+	prints(buf);
 }
 
+/* print hex integer */
 void printx(unsigned int d) {
     char buf[100];
     int strsz = 0;
@@ -78,7 +83,8 @@ void printx(unsigned int d) {
         buf[i] = buf[j];
         buf[j] = tmp;
     }
-    syscall(SYS_write, 1, (uint32_t)buf, strsz);
+	buf[strsz] = '\0';
+	prints(buf);
 }
 
 void printf(const char *str, ...)
@@ -94,8 +100,8 @@ void printf(const char *str, ...)
     	    switch (token) {
                 case 'd': printd(va_arg(ap, int));   break;
                 case 's': prints(va_arg(ap, char*)); break;
-                case 'c': printc(va_arg(ap, int));  break;
-                case 'x': printx(va_arg(ap, int));  break;
+                case 'c': printc(va_arg(ap, int));   break;
+                case 'x': printx(va_arg(ap, int));   break;
     	    }
     	}
     	else {

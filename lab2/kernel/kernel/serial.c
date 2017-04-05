@@ -20,8 +20,18 @@ void putChar(char ch) {
 	outByte(SERIAL_PORT, ch);
 }
 
-void video_print(int row, int col, char c) {
-	asm ("movl %0, %%edi;"			: :"r"(((80 * row + col) * 2))  :"%edi"); // 写在屏幕的第5行第0列
-	asm ("movw %0, %%eax;"			: :"r"(0x0c00 | c) 				:"%eax"); // 0x0黑底,0xc红字,字母ASCII码
+/* print to video segment */
+void video_print2(int row, int col, char c) {
+	asm ("movl %0, %%edi;"			: :"r"(((80 * row + col) * 2))  :"%edi");
+	asm ("movw %0, %%eax;"			: :"r"(0x0c00 | c) 				:"%eax"); // 0x0黑底,0xc红字, 字母ASCII码
 	asm ("movw %%ax, %%gs:(%%edi);" : : 							:"%edi"); // 写入显存
+}
+
+/* directly write to video segment */
+void video_print(int row, int col, char c) {
+	unsigned int p1, p2;
+	p1 = 0xb8000 + (80 * row + col) * 2;
+	p2 = p1 + 1;
+	*(unsigned char*)p1 = c;
+	*(unsigned char*)p2 = 0x0c;
 }

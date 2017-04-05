@@ -38,20 +38,20 @@ void initSeg() {
 	setGdt(gdt, sizeof(gdt));
 
 	/*
-	 * 初始化TSS
+	 * initialize TSS
 	 */
-	//asm volatile("movl %%esp, %0": "=r"(tss.esp0));
-	tss.esp0 = 0x200000;
-	tss.ss0 = KSEL(SEG_KDATA);
+	// asm volatile("movl %%esp, %0": "=r"(tss.esp0));
+	tss.esp0 = 0x200000;   // set kernel esp to 0x200,000
+	tss.ss0  = KSEL(SEG_KDATA);
 	asm volatile("ltr %%ax":: "a" (KSEL(SEG_TSS)));
 
-	/*设置正确的段寄存器*/
-	asm volatile("movw $(2 << 3), %ax");
+	/* set segment register */
+	asm volatile("movl %0, %%eax":: "r"(KSEL(SEG_KDATA)));
 	asm volatile("movw %ax, %ds");
 	asm volatile("movw %ax, %es");
 	asm volatile("movw %ax, %ss");
 	asm volatile("movw %ax, %fs");
-	asm volatile("movw $(6 << 3), %ax");
+	asm volatile("movl %0, %%eax":: "r"(KSEL(SEG_VIDEO)));
 	asm volatile("movw %ax, %gs");
 	lLdt(0);
 
@@ -63,20 +63,17 @@ void enterUserSpace(uint32_t entry) {
 	 * you should set the right segment registers here
 	 * and use 'iret' to jump to ring3
 	 */
+	asm volatile("pushl %0":: "r"(USEL(SEG_UDATA)));	// %ss
+	asm volatile("pushl %0":: "r"(128 << 20));			// %esp 128MB
+	asm volatile("pushfl");								// %eflags
+	asm volatile("pushl %0":: "r"(USEL(SEG_UCODE)));	// %cs
+	asm volatile("pushl %0":: "r"(entry));				// %eip
 
-	asm volatile("pushl %0"::"r"(USEL(SEG_UDATA)));			// %ss
-	asm volatile("pushl %0"::"r"(0x40 << 20));			// %esp
-	asm volatile("pushfl");		// %eflags
-	asm volatile("pushl %0"::"r"(USEL(SEG_UCODE)));			// %cs
-	asm volatile("pushl %0"::"r"(entry));			// %eip
-
-	//asm_print(5, 1, 'x');
-
-	asm volatile("iret");
+	asm volatile("iret"); // return to user space
 }
 
 void loadUMain(void) {
-	/*加载用户程序至内存*/
+	/* load user elf-file */
 	struct ELFHeader *elf;
 	struct ProgramHeader *ph;
 
@@ -91,11 +88,12 @@ void loadUMain(void) {
 	ph = (struct ProgramHeader *)(buf + elf->phoff);
 	int i;
 	for(i = 0; i < elf->phnum; ++i) {
+
 		/* Scan the program header table, load each segment into memory */
+		if (ph->type == 1) {
 			/* read the content of the segment from the ELF file
 			 * to the memory region [VirtAddr, VirtAddr + FileSiz)
 			 */
-		if (ph->type == 1) {
 			unsigned int p = ph->vaddr, q = ph->off;
 			while (q < ph->vaddr + ph->filesz) {
 				*(unsigned char*)p = *(unsigned char*)(buf + q);
