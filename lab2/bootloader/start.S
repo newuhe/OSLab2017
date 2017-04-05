@@ -13,8 +13,7 @@ start:
 
 .code32
 start32:
-	# 初始化DS ES FS GS SS 初始化栈顶指针ESP
-	# Set up the protected-mode data segment registers
+	# no longer needed
 #	movw    $(2 << 3), %ax
 #	movw    %ax, %ds          # %DS = %AX
 #	movw    %ax, %es          # %ES = %AX
@@ -38,16 +37,16 @@ gdt: # 8 bytes for each table entry, at least 1 entry
 
 #	.word 0xffff,0                  # user code descriptor
 #	.byte 0,0xfa,0xcf,0
-#	#     0,0x9a,0xcf,0
+
 #	.word 0xffff,0                  # user data descriptor
 #	.byte 0,0xf2,0xcf,0
 #
 #	.word 0xffff,0                  # TSS descriptor
 #	.byte 0,0x92,0xcf,0
 
-#	.word 0xffff,0x8000             # 视频段描述符
+#	.word 0xffff,0x8000             # video segment descriptor
 #	.byte 0x0b,0x92,0xcf,0
 
-gdtDesc: # 6 bytes in total
+gdtDesc:
 	.word (gdtDesc - gdt -1)
 	.long gdt
