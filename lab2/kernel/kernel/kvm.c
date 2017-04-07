@@ -34,7 +34,7 @@ void initSeg() {
 	gdt[SEG_UDATA] = SEG(STA_W,         0,       0xffffffff, DPL_USER);
 	gdt[SEG_TSS] = SEG16(STS_T32A,   &tss,    sizeof(TSS)-1, DPL_KERN);
 	gdt[SEG_TSS].s = 0;
-	gdt[SEG_VIDEO] = SEG(STA_W,  0x0b8000,       0xffffffff, DPL_USER);
+	gdt[SEG_VIDEO] = SEG(STA_W,  0x0b8000,       0xffffffff, DPL_KERN);
 	setGdt(gdt, sizeof(gdt));
 
 	/*

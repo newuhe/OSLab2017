@@ -26,6 +26,8 @@ void irqHandle(struct TrapFrame *tf) {
 }
 
 void sys_write(struct TrapFrame *tf) {
+	asm volatile("movl %0, %%eax":: "r"(KSEL(SEG_VIDEO)));
+	asm volatile("movw %ax, %gs");
 	static int row = 0, col = 0;
 	char c = '\0';
 	// ebx:file-descriptor, ecx:str, edx:len
