@@ -68,6 +68,8 @@ void enterUserSpace(uint32_t entry) {
 	 * you should set the right segment registers here
 	 * and use 'iret' to jump to ring3
 	 */
+
+	asm volatile("sti");
 	asm volatile("pushl %0":: "r"(USEL(SEG_UDATA)));	// %ss
 	asm volatile("pushl %0":: "r"(128 << 20));			// %esp 128MB
 	asm volatile("pushfl");								// %eflags
