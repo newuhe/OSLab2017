@@ -92,7 +92,7 @@ struct TSS {
 			uint32_t cr3, eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
 			uint32_t es, cs, ss, ds, fs, gs, ldt;
 		};
-        };
+	};
 };
 typedef struct TSS TSS;
 

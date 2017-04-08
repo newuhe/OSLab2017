@@ -34,6 +34,7 @@ static void setTrap(struct GateDescriptor *ptr, uint32_t selector, uint32_t offs
 /* 声明函数，这些函数在汇编代码里定义 */
 void irqEmpty();
 void irqGProtectFault();
+void irqTimerInterrupt();
 void irqSyscall();
 
 void initIdt() {
@@ -48,6 +49,8 @@ void initIdt() {
 	 */
 
 	setTrap(idt + 0xd, SEG_KCODE, (uint32_t)irqGProtectFault, DPL_KERN);
+
+	setTrap(idt + 0x20, SEG_KCODE, (uint32_t)irqTimerInterrupt, DPL_KERN); // for time interrupt
 
 	setIntr(idt + 0x80, SEG_KCODE, (uint32_t)irqSyscall, DPL_USER); // for int 0x80, interrupt vector is 0x80, Interruption is disabled
 

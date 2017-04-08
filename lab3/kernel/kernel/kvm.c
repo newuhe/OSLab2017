@@ -45,7 +45,7 @@ void initSeg() {
 	tss.ss0  = KSEL(SEG_KDATA);
 	asm volatile("ltr %%ax":: "a" (KSEL(SEG_TSS)));
 
-	/* set segment register */
+	/* set kernel segment register */
 	asm volatile("movl %0, %%eax":: "r"(KSEL(SEG_KDATA)));
 	asm volatile("movw %ax, %ds");
 	asm volatile("movw %ax, %es");
@@ -58,6 +58,11 @@ void initSeg() {
 }
 
 void enterUserSpace(uint32_t entry) {
+//	/* set user segment register */
+//	asm volatile("movl %0, %%eax":: "r"(USEL(SEG_UDATA)));
+//	asm volatile("movw %ax, %ds");
+//	asm volatile("movw %ax, %es");
+//	asm volatile("movw %ax, %fs");
 	/*
 	 * Before enter user space
 	 * you should set the right segment registers here

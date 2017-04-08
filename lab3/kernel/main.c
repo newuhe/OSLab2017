@@ -7,6 +7,7 @@ void kEntry(void) {
 	initSerial(); // initialize serial port
 	initIdt();    // initialize idt
 	initIntr();   // iniialize 8259a
+	initTimer();   // iniialize 8253 timer
 	initSeg();    // initialize gdt, tss
 	loadUMain();  // load user program, enter user space
 

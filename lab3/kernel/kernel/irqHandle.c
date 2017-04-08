@@ -5,6 +5,8 @@
 
 void syscallHandle(struct TrapFrame *tf);
 
+void timerInterruptHandle(struct TrapFrame *tf);
+
 void GProtectFaultHandle(struct TrapFrame *tf);
 
 void irqHandle(struct TrapFrame *tf) {
@@ -17,6 +19,9 @@ void irqHandle(struct TrapFrame *tf) {
 			break;
 		case 0xd:
 			GProtectFaultHandle(tf);
+			break;
+		case 0x20:
+			timerInterruptHandle(tf);
 			break;
 		case 0x80:
 			syscallHandle(tf);
@@ -52,6 +57,8 @@ void sys_write(struct TrapFrame *tf) {
 	else { // other file descriptor
 		panic("sys_write not implemented");
 	}
+	asm volatile("int $0x20");
+	asm volatile("hlt");
 }
 
 void syscallHandle(struct TrapFrame *tf) {
@@ -64,6 +71,16 @@ void syscallHandle(struct TrapFrame *tf) {
 		default: panic("syscal not implemented");
 	}
 }
+
+void timerInterruptHandle(struct TrapFrame *tf) {
+	/* 实现系统调用*/
+	putChar('t');
+	putChar('i');
+	putChar('m');
+	putChar('e');
+	putChar('\n');
+}
+
 
 void GProtectFaultHandle(struct TrapFrame *tf){
 	panic("GProtect Fault");
