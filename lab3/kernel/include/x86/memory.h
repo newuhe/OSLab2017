@@ -29,6 +29,9 @@
 #define KSEL(desc) (((desc) << 3) | DPL_KERN)
 #define USEL(desc) (((desc) << 3) | DPL_USER)
 
+#define MAX_STACK_SIZE (8 << 10)  // kernel stack size (8KB)
+#define MAX_PCB_NUM    20         // PCB size
+
 struct GateDescriptor {
 	uint32_t offset_15_0      : 16;
 	uint32_t segment          : 16;
@@ -107,9 +110,19 @@ static inline void setGdt(SegDesc *gdt, uint32_t size) {
 	asm volatile("lgdt (%0)" : : "r"(data));
 }
 
-static inline void lLdt(uint16_t sel)
-{
+static inline void lLdt(uint16_t sel) {
 	asm volatile("lldt %0" :: "r"(sel));
 }
+
+struct ProcessTable {
+    uint32_t stack[MAX_STACK_SIZE]; // kernel stack
+    struct TrapFrame tf;
+    int state;
+    int timeCount;
+    int sleepTime;
+    uint32_t pid;
+};
+
+struct ProcessTable pcb[MAX_PCB_NUM];
 
 #endif
