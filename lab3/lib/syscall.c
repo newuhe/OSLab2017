@@ -91,8 +91,7 @@ void printx(unsigned int d) {
 	prints(buf);
 }
 
-void printf(const char *str, ...)
-{
+void printf(const char *str, ...) {
     char token;
     va_list ap;
     va_start(ap, str);
@@ -114,4 +113,19 @@ void printf(const char *str, ...)
     	str++;
     }
     va_end(ap);
+}
+
+int my_fork() {
+	// TODO:
+	return syscall(SYS_fork, 1, 1, 1);
+}
+
+void my_exit() {
+	// TODO:
+	syscall(SYS_exit, 1, 1, 1);
+}
+
+void my_sleep() {
+	// TODO:
+	syscall(SYS_sleep, 1, 1, 1);
 }

@@ -7,6 +7,8 @@
 #define	SYS_write	4
 #define SYS_sleep	200 // user defined
 
+void IDLE();
+
 void syscallHandle(struct TrapFrame *tf);
 
 void timerInterruptHandle(struct TrapFrame *tf);
@@ -32,6 +34,18 @@ void irqHandle(struct TrapFrame *tf) {
 			break;
 		default:assert(0);
 	}
+}
+
+void sys_exit(struct TrapFrame *tf) {
+	// TODO:
+}
+
+void sys_fork(struct TrapFrame *tf) {
+	// TODO:
+}
+
+void sys_sleep(struct TrapFrame *tf) {
+	// TODO:
 }
 
 void sys_write(struct TrapFrame *tf) {
@@ -66,7 +80,10 @@ void sys_write(struct TrapFrame *tf) {
 void syscallHandle(struct TrapFrame *tf) {
 	/* 实现系统调用*/
 	switch(tf->eax) {
+		case SYS_exit:  sys_exit(tf);  break;
+		case SYS_fork:  sys_fork(tf);  break;
 		case SYS_write: sys_write(tf); break;
+		case SYS_sleep: sys_sleep(tf); break;
 		/**
 		 * TODO: add more syscall
 		 */
@@ -88,4 +105,11 @@ void timerInterruptHandle(struct TrapFrame *tf) {
 void GProtectFaultHandle(struct TrapFrame *tf){
 	panic("GProtect Fault");
 	return;
+}
+
+void IDLE() {
+	while(1) {
+		putChar('0');
+		waitForInterrupt();
+	}
 }
