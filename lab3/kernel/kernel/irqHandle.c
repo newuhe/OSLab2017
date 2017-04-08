@@ -57,7 +57,8 @@ void sys_write(struct TrapFrame *tf) {
 	else { // other file descriptor
 		panic("sys_write not implemented");
 	}
-	asm volatile("int $0x20");
+	//asm volatile("int $0x20");
+	while(1)
 	asm volatile("hlt");
 }
 

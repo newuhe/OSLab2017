@@ -50,9 +50,9 @@ void initIdt() {
 
 	setTrap(idt + 0xd, SEG_KCODE, (uint32_t)irqGProtectFault, DPL_KERN);
 
-	setTrap(idt + 0x20, SEG_KCODE, (uint32_t)irqTimerInterrupt, DPL_KERN); // for time interrupt
+	setIntr(idt + 0x20, SEG_KCODE, (uint32_t)irqTimerInterrupt, DPL_KERN); // for time interrupt
 
-	setIntr(idt + 0x80, SEG_KCODE, (uint32_t)irqSyscall, DPL_USER); // for int 0x80, interrupt vector is 0x80, Interruption is disabled
+	setTrap(idt + 0x80, SEG_KCODE, (uint32_t)irqSyscall, DPL_USER); // for int 0x80, interrupt vector is 0x80, Interruption is disabled
 
 	/* 写入IDT */
 	saveIdt(idt, sizeof(idt));
