@@ -61,9 +61,6 @@ void sys_write(struct TrapFrame *tf) {
 	else { // other file descriptor
 		panic("sys_write not implemented");
 	}
-	//asm volatile("int $0x20");
-	while(1)
-	asm volatile("hlt");
 }
 
 void syscallHandle(struct TrapFrame *tf) {
@@ -78,11 +75,12 @@ void syscallHandle(struct TrapFrame *tf) {
 }
 
 void timerInterruptHandle(struct TrapFrame *tf) {
-	/* 实现系统调用*/
 	putChar('t');
 	putChar('i');
 	putChar('m');
 	putChar('e');
+	putChar('r');
+	putChar(' ');
 	putChar('\n');
 }
 

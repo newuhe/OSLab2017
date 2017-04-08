@@ -2,8 +2,6 @@
 #include "types.h"
 
 int uEntry(void) {
-	//asm volatile("hlt");
-	printf("123");
 	while(1);
 	printf("printf test begin...\n");
 	printf("the answer should be:\n");
