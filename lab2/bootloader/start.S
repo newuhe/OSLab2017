@@ -14,14 +14,15 @@ start:
 .code32
 start32:
 	# no longer needed
-#	movw    $(2 << 3), %ax
+	movw    $(2 << 3), %ax
 #	movw    %ax, %ds          # %DS = %AX
 #	movw    %ax, %es          # %ES = %AX
-#	movw    %ax, %ss          # %SS = %AX
+	movw    %ax, %ss          # %SS = %AX
 #	movw    %ax, %fs          # %FS = %AX
 #	movw    $(3 << 3), %ax
 #	movw    %ax, %gs          # %GS = %AX
-
+	movl $0, %ebp
+	movl $(128 << 20), %esp
 	jmp bootMain                    # 跳转至bootMain函数 定义于boot.c
 
 .p2align 2
@@ -32,8 +33,8 @@ gdt: # 8 bytes for each table entry, at least 1 entry
 	.word 0xffff,0                  # kernel code descriptor
 	.byte 0,0x9a,0xcf,0
 
-#	.word 0xffff,0                  # kernel data descriptor
-#	.byte 0,0x92,0xcf,0
+	.word 0xffff,0                  # kernel data descriptor
+	.byte 0,0x92,0xcf,0
 
 #	.word 0xffff,0                  # user code descriptor
 #	.byte 0,0xfa,0xcf,0
