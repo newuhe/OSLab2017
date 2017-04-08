@@ -1,8 +1,12 @@
 #include "lib.h"
 #include "types.h"
-#include<stdarg.h>
+#include <stdarg.h>
 
-#define	SYS_write	4 // defined in <sys/syscall.h>
+/* defined in <sys/syscall.h> */
+#define	SYS_exit	1
+#define	SYS_fork	2
+#define	SYS_write	4
+#define SYS_sleep	200 // user defined
 
 /*
  * io lib here
