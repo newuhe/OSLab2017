@@ -49,6 +49,8 @@ void sys_sleep(struct TrapFrame *tf) {
 }
 
 void sys_write(struct TrapFrame *tf) {
+//	putChar(tf->gs + '0'); 	//should be '0'
+//	putChar(tf->ds);		//should be '#'
 	asm volatile("movl %0, %%eax":: "r"(KSEL(SEG_VIDEO)));
 	asm volatile("movw %ax, %gs");
 	static int row = 0, col = 0;
