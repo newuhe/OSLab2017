@@ -8,6 +8,7 @@
 #define SYS_sleep	200 // user defined
 
 void IDLE();
+void schedule();
 
 void syscallHandle(struct TrapFrame *tf);
 
@@ -46,11 +47,12 @@ void sys_fork(struct TrapFrame *tf) {
 
 void sys_sleep(struct TrapFrame *tf) {
 	// TODO:
+	// int sleep_time = tf->eax;
 }
 
 void sys_write(struct TrapFrame *tf) {
-//	putChar(tf->gs + '0'); 	//should be '0'
-//	putChar(tf->ds);		//should be '#'
+	//	putChar(tf->gs + '0'); 	//should be '0'
+	//	putChar(tf->ds);		//should be '#'
 	asm volatile("movl %0, %%eax":: "r"(KSEL(SEG_VIDEO)));
 	asm volatile("movw %ax, %gs");
 	static int row = 0, col = 0;
@@ -94,13 +96,10 @@ void syscallHandle(struct TrapFrame *tf) {
 }
 
 void timerInterruptHandle(struct TrapFrame *tf) {
-	putChar('t');
-	putChar('i');
-	putChar('m');
-	putChar('e');
-	putChar('r');
-	putChar(' ');
-	putChar('\n');
+	putChar('0');
+	if(current->timeCount == 0) {
+		schedule();
+	}
 }
 
 
@@ -114,4 +113,8 @@ void IDLE() {
 		putChar('0');
 		waitForInterrupt();
 	}
+}
+
+void schedule() {
+
 }

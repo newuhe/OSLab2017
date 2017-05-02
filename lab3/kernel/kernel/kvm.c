@@ -41,6 +41,7 @@ void initSeg() {
 	 * initialize TSS
 	 */
 	// asm volatile("movl %%esp, %0": "=r"(tss.esp0));
+	//tss.esp0 = 0x200000;   // set kernel esp to 0x200,000
 	tss.esp0 = 0x200000;   // set kernel esp to 0x200,000
 	tss.ss0  = KSEL(SEG_KDATA);
 	asm volatile("ltr %%ax":: "a" (KSEL(SEG_TSS)));
@@ -84,7 +85,8 @@ void loadUMain(void) {
 	struct ELFHeader *elf;
 	struct ProgramHeader *ph;
 
-	unsigned char *buf = (unsigned char *)0x5000000;
+	unsigned char buf[10000];
+	//unsigned char *buf = (unsigned char *)0x5000000;
 	for (int i = 0; i < 100; i ++) {
 		readSect((void*)(buf + 512 * i), i + 201);
 	}
@@ -119,5 +121,6 @@ void loadUMain(void) {
 		ph++;
 	}
 
-	enterUserSpace(elf->entry);
+	init_pcb(elf->entry);
+	//enterUserSpace(elf->entry);
 }

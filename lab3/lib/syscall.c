@@ -115,17 +115,17 @@ void printf(const char *str, ...) {
     va_end(ap);
 }
 
-int my_fork() {
+int fork() {
 	// TODO:
 	return syscall(SYS_fork, 1, 1, 1);
 }
 
-void my_exit() {
+void exit() {
 	// TODO:
 	syscall(SYS_exit, 1, 1, 1);
 }
 
-void my_sleep() {
+void sleep(int time) {
 	// TODO:
-	syscall(SYS_sleep, 1, 1, 1);
+	syscall(SYS_sleep, time, 1, 1);
 }
