@@ -7,7 +7,6 @@
 #define SYS_write 4
 #define SYS_sleep 200  // user defined
 
-void IDLE();
 void schedule();
 
 void syscallHandle(struct TrapFrame *tf);
@@ -48,54 +47,56 @@ void irqHandle(struct TrapFrame *tf) {
 
 void sys_exit(struct TrapFrame *tf) {
     // TODO:
-    uint32_t pid = pcb[pcb_cur].pid;
-    if (pcb_head == -1) {
-        return;
-    }
-    if (pcb[pcb_head].pid == pid) {
-        int t = pcb_head;
-        pcb_head = pcb[pcb_head].next;
-        pcb[t].next = pcb_free;
-        pcb_free = t;
+    struct ProcessTable *p, *q;
+    uint32_t pid = pcb_cur->pid;
+
+    // remove from pcb list
+    if (pcb_head->pid == pid) {
+        p = pcb_head;
+        pcb_head = pcb_head->next;
+        p->next = pcb_free;
+        pcb_free = p;
     } else {
-        int p = pcb_head, i = pcb[pcb_head].next;
-        while (i != -1) {
-            if (pcb[i].pid == pid) {
-                pcb[p].next = pcb[i].next;
-                pcb[i].next = pcb_free;
-                pcb_free = i;
+        p = pcb_head, q = pcb_head->next;
+        while (q != NULL) {
+            if (q->pid == pid) {
+                p->next = q->next;
+                q->next = pcb_free;
+                pcb_free = q;
                 break;
             }
-            p = i;
-            i = pcb[i].next;
+            p = q;
+            q = q->next;
         }
     }
-    if (pcb[pcb_cur].pid == pid) {
-        pcb_cur = -1;
-        schedule();
-    }
+
+    pcb_cur = NULL;
+    schedule();
+
+    // should not reach here
+    assert(0);
 }
 
 void sys_fork(struct TrapFrame *tf) {
     // TODO:
-    int pi = new_pcb();
+    struct ProcessTable *p = new_pcb();
 
     // copy user space memory
-    int src = APP_MEM_START + pcb_cur * PROC_MEMSZ,
-        dst = APP_MEM_START + pi * PROC_MEMSZ;
+    int src = APP_START + NR_PCB(pcb_cur) * PROC_MEMSZ;
+    int dst = APP_START + NR_PCB(p) * PROC_MEMSZ;
     for (int i = 0; i < PROC_MEMSZ; i++) {
         *((uint8_t *)dst + i) = *((uint8_t *)src + i);
     }
 
     // copy kernel stack
     for (int i = 0; i < KERNEL_STACK_SIZE; i++) {
-        pcb[pi].stack[i] = pcb[pcb_cur].stack[i];
+        p->stack[i] = pcb_cur->stack[i];
     }
 
-    pcb[pi].tf.eax = 0;                 // child process return value
-    pcb[pcb_cur].tf.eax = pcb[pi].pid;  // father process return value
+    p->tf.eax = 0;             // child process return value
+    pcb_cur->tf.eax = p->pid;  // father process return value
 
-    pcb[pcb_cur].state = RUNNABLE;
+    pcb_cur->state = RUNNABLE;
 
     schedule();
 }
@@ -103,8 +104,8 @@ void sys_fork(struct TrapFrame *tf) {
 void sys_sleep(struct TrapFrame *tf) {
     // TODO:
     // putChar('0' + tf->ebx);
-    pcb[pcb_cur].sleepTime = pcb[pcb_cur].tf.ebx;
-    pcb[pcb_cur].state = BLOCKED;
+    pcb_cur->sleepTime = tf->ebx;
+    pcb_cur->state = BLOCKED;
     schedule();
 }
 
@@ -115,9 +116,9 @@ void sys_write(struct TrapFrame *tf) {
     char c = '\0';
 
     // !!! must add offset !!!
-    tf->ecx += (pcb_cur * PROC_MEMSZ);
+    tf->ecx += ((pcb_cur - pcb) * PROC_MEMSZ);
 
-	// ebx:file-descriptor, ecx:str, edx:len
+    // ebx:file-descriptor, ecx:str, edx:len
     if (tf->ebx == 1 || tf->ebx == 2) {  // stdout & stderr
         int i;
         for (i = 0; i < tf->edx; i++) {
@@ -164,33 +165,32 @@ void syscallHandle(struct TrapFrame *tf) {
 }
 
 void timerInterruptHandle(struct TrapFrame *tf) {
+    // putChar('.');
 
-//	putChar('.');
-
-    // reduce slepp time
-    int i = pcb_head;
-    while (i != -1) {
-        if (pcb[i].sleepTime > 0) {
-            pcb[i].sleepTime--;
-            if (pcb[i].sleepTime == 0) {
-                pcb[i].state = RUNNABLE;
+    struct ProcessTable *p = pcb_head;
+    while (p != NULL) {
+        if (p->sleepTime > 0) {
+            --(p->sleepTime);
+            if (p->sleepTime == 0) {
+                p->state = RUNNABLE;
             }
         }
-        i = pcb[i].next;
+        p = p->next;
     }
 
-    if (pcb_cur == -1) {
+    if (pcb_cur == NULL) {  // IDLE
         schedule();
         return;
     }
 
-    pcb[pcb_cur].timeCount--;
-    if (pcb[pcb_cur].timeCount == 0) {
-        pcb[pcb_cur].timeCount = TIMESLICE;
-        pcb[pcb_cur].state = RUNNABLE;
+    --(pcb_cur->timeCount);
+    if (pcb_cur->timeCount == 0) {
+        pcb_cur->state = RUNNABLE;
+        pcb_cur->timeCount = TIMESLICE;
         // putChar('x');
         schedule();
     }
+    return;
 }
 
 void GProtectFaultHandle(struct TrapFrame *tf) {

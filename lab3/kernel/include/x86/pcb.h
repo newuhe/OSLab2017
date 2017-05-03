@@ -7,7 +7,7 @@
 #define KERNEL_STACK_SIZE (16 << 10)  // kernel stack size (16KB)
 
 #define PROC_MEMSZ (1 << 16)
-#define APP_MEM_START 0X200000
+#define APP_START 0X200000
 
 #define MAX_PCB_NUM 20  // PCB size
 
@@ -32,18 +32,20 @@ struct ProcessTable {
     int timeCount;
     int sleepTime;
     uint32_t pid;
-    int next;
+    struct ProcessTable *next;
 };
 
 struct ProcessTable pcb[MAX_PCB_NUM];
 
-int pcb_head;  // allocated pcb list head
-int pcb_free;  // free pcb list head
-int pcb_cur;   // current runnning process
+struct ProcessTable * pcb_head;  // allocated pcb list head
+struct ProcessTable * pcb_free;  // free pcb list head
+struct ProcessTable * pcb_cur;   // current runnning process
+
+#define NR_PCB(p) (p - pcb)
 
 void init_pcb();
 void enter_proc(uint32_t entry);
 void schedule();
-int new_pcb();
+struct ProcessTable * new_pcb();
 
 #endif

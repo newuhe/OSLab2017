@@ -20,12 +20,12 @@ void putChar(char ch) {
 	outByte(SERIAL_PORT, ch);
 }
 
-void update_cursor(int row, int col) {
-	uint16_t d = row * SCR_WIDTH + col;
+void update_cursor(int r, int c) {
+	uint16_t pos = r * 80 + c;
 	outByte(0x3d4, 0x0f);
-	outByte(0x3d5, 0xff & d);
+	outByte(0x3d5, 0xff & pos);
 	outByte(0x3d4, 0x0e);
-	outByte(0x3d5, d >> 8);
+	outByte(0x3d5, pos >> 8);
 }
 
 /* print to video segment */
@@ -41,15 +41,15 @@ void video_print2(int row, int col, char c) {
 	unsigned int p1, p2;
 	p1 = 0xb8000 + (80 * row + col) * 2;
 	p2 = p1 + 1;
-	*(unsigned char*)p1 = c;
-	*(unsigned char*)p2 = 0x0c;
+	*(uint8_t*)p1 = c;
+	*(uint8_t*)p2 = 0x0c;
 	update_cursor(row, col);
 }
 
 // clear screen
 void init_vga() {
 	update_cursor(0, 0);
-	for (int i = 0; i < 10 * SCR_WIDTH; i ++) {
-		*(VMEM + i) = (RED_BLK << 8);
+	for (int i = 0; i < 10 * 80; i ++) {
+		*((uint16_t *)0xb8000 + i) = (0x0c << 8);
 	}
 }
