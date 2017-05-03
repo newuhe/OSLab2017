@@ -4,9 +4,6 @@
 #include <common.h>
 #include "memory.h"
 
-// process state
-enum { BLOCKED, DEAD, RUNNING, RUNNABLE };
-
 #define KERNEL_STACK_SIZE (16 << 10)  // kernel stack size (16KB)
 
 #define PROC_MEMSZ (1 << 16)
@@ -17,6 +14,11 @@ enum { BLOCKED, DEAD, RUNNING, RUNNABLE };
 #define TIMESLICE 10
 
 #define PID_START 1000
+
+#define IDLE_STACK 0x200000
+
+// process state
+enum { BLOCKED, DEAD, RUNNING, RUNNABLE };
 
 struct ProcessTable {
     union {
@@ -29,13 +31,9 @@ struct ProcessTable {
     int state;
     int timeCount;
     int sleepTime;
-    uint32_t sp, bp, ip;
     uint32_t pid;
     int next;
 };
-
-struct ProcessTable *current;  // current running process
-int cur_pcb_num;
 
 struct ProcessTable pcb[MAX_PCB_NUM];
 

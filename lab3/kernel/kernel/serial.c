@@ -20,11 +20,20 @@ void putChar(char ch) {
 	outByte(SERIAL_PORT, ch);
 }
 
+void update_cursor(int row, int col) {
+	uint16_t d = row * SCR_WIDTH + col;
+	outByte(0x3d4, 0x0f);
+	outByte(0x3d5, 0xff & d);
+	outByte(0x3d4, 0x0e);
+	outByte(0x3d5, d >> 8);
+}
+
 /* print to video segment */
 void video_print(int row, int col, char c) {
 	asm ("movl %0, %%edi;"			: :"r"(((80 * row + col) * 2))  :"%edi");
 	asm ("movw %0, %%eax;"			: :"r"(0x0c00 | c) 				:"%eax"); // 0x0黑底,0xc红字, 字母ASCII码
 	asm ("movw %%ax, %%gs:(%%edi);" : : 							:"%edi"); // 写入显存
+	update_cursor(row, col);
 }
 
 /* directly write to video segment */
@@ -34,4 +43,13 @@ void video_print2(int row, int col, char c) {
 	p2 = p1 + 1;
 	*(unsigned char*)p1 = c;
 	*(unsigned char*)p2 = 0x0c;
+	update_cursor(row, col);
+}
+
+// clear screen
+void init_vga() {
+	update_cursor(0, 0);
+	for (int i = 0; i < 10 * SCR_WIDTH; i ++) {
+		*(VMEM + i) = (RED_BLK << 8);
+	}
 }

@@ -83,8 +83,8 @@ void sys_fork(struct TrapFrame *tf) {
     // copy user space memory
     int src = APP_MEM_START + pcb_cur * PROC_MEMSZ,
         dst = APP_MEM_START + pi * PROC_MEMSZ;
-    for (int i = 0; i < PROC_MEMSZ / 4; i++) {
-        *((uint32_t *)dst + i) = *((uint32_t *)src + i);
+    for (int i = 0; i < PROC_MEMSZ; i++) {
+        *((uint8_t *)dst + i) = *((uint8_t *)src + i);
     }
 
     // copy kernel stack
@@ -92,8 +92,8 @@ void sys_fork(struct TrapFrame *tf) {
         pcb[pi].stack[i] = pcb[pcb_cur].stack[i];
     }
 
-    pcb[pi].tf.eax = 0;                 // child process
-    pcb[pcb_cur].tf.eax = pcb[pi].pid;  // father process
+    pcb[pi].tf.eax = 0;                 // child process return value
+    pcb[pcb_cur].tf.eax = pcb[pi].pid;  // father process return value
 
     pcb[pcb_cur].state = RUNNABLE;
 
@@ -113,16 +113,16 @@ void sys_write(struct TrapFrame *tf) {
     //	putChar(tf->ds);		//should be '#'
     static int row = 0, col = 0;
     char c = '\0';
-    // ebx:file-descriptor, ecx:str, edx:len
 
-    // TODO:
+    // !!! must add offset !!!
     tf->ecx += (pcb_cur * PROC_MEMSZ);
 
+	// ebx:file-descriptor, ecx:str, edx:len
     if (tf->ebx == 1 || tf->ebx == 2) {  // stdout & stderr
         int i;
         for (i = 0; i < tf->edx; i++) {
             c = *(char *)(tf->ecx + i);
-            putChar(c);
+            // putChar(c);
             if (c == '\n') {
                 row++;
                 col = 0;
@@ -164,14 +164,8 @@ void syscallHandle(struct TrapFrame *tf) {
 }
 
 void timerInterruptHandle(struct TrapFrame *tf) {
-    // putChar('.');
 
-    if (pcb_cur == -1) {
-        // IDLE procedure
-        putChar('~');
-    } else {
-        putChar('0' + pcb[pcb_cur].pid - PID_START);
-    }
+//	putChar('.');
 
     // reduce slepp time
     int i = pcb_head;
@@ -194,7 +188,7 @@ void timerInterruptHandle(struct TrapFrame *tf) {
     if (pcb[pcb_cur].timeCount == 0) {
         pcb[pcb_cur].timeCount = TIMESLICE;
         pcb[pcb_cur].state = RUNNABLE;
-        putChar('x');
+        // putChar('x');
         schedule();
     }
 }

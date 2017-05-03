@@ -129,7 +129,6 @@ void loadUMain(void) {
         *((uint8_t *)dst + i) = *((uint8_t *)src + i);
     }
 
-	init_pcb();
 	enter_proc(elf->entry);
 	// enterUserSpace(elf->entry);
 }
