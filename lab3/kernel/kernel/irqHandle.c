@@ -56,23 +56,9 @@ void sys_fork(struct TrapFrame *tf) {
 
 void sys_sleep(struct TrapFrame *tf) {
     // TODO:
-    /*
-    current->sleepTime = tf->ebx;
-    current->state = BLOCKED;
-    schedule();
-        */
+    // putChar('0' + tf->ebx);
     pcb[pcb_cur].sleepTime = pcb[pcb_cur].tf.ebx;
     pcb[pcb_cur].state = BLOCKED;
-    // move current process to the end of list
-    int i = pcb[pcb_cur].next;
-    if (i != -1) {
-        pcb[pcb_cur].next = -1;
-        pcb_head = i;
-        while (pcb[i].next != -1) {
-            i = pcb[i].next;
-        }
-        pcb[i].next = pcb_cur;
-    }
     schedule();
 }
 
@@ -131,10 +117,11 @@ void syscallHandle(struct TrapFrame *tf) {
 }
 
 void timerInterruptHandle(struct TrapFrame *tf) {
+	//putChar('.');
 
     if (pcb_cur == -1) {
 		// IDLE procedure
-        putChar('.');
+        putChar('~');
     } else {
         putChar('0' + pcb[pcb_cur].pid - PID_START);
     }
@@ -160,16 +147,7 @@ void timerInterruptHandle(struct TrapFrame *tf) {
     if (pcb[pcb_cur].timeCount == 0) {
         pcb[pcb_cur].timeCount = TIMESLICE;
         pcb[pcb_cur].state = RUNNABLE;
-        // move current process to the end of list
-        i = pcb[pcb_cur].next;
-        if (i != -1) {
-            pcb[pcb_cur].next = -1;
-            pcb_head = i;
-            while (pcb[i].next != -1) {
-                i = pcb[i].next;
-            }
-            pcb[i].next = pcb_cur;
-        }
+		putChar('x');
         schedule();
     }
 }
@@ -177,11 +155,4 @@ void timerInterruptHandle(struct TrapFrame *tf) {
 void GProtectFaultHandle(struct TrapFrame *tf) {
     panic("GProtect Fault");
     return;
-}
-
-void IDLE() {
-    while (1) {
-        putChar('x');
-        waitForInterrupt();
-    }
 }

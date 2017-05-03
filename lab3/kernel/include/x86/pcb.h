@@ -29,6 +29,7 @@ struct ProcessTable {
     int state;
     int timeCount;
     int sleepTime;
+    uint32_t sp, bp, ip;
     uint32_t pid;
     int next;
 };

@@ -3,29 +3,32 @@
 
 extern SegDesc gdt[NR_SEGMENTS];
 
-void schedule() {
-    /*
-    int next_proc = -1;
-    for (int i = 0; i < cur_pcb_num; i++) {
-        if (pcb[i].state == RUNNABLE) {
-            next_proc = i;
-            current = &pcb[i];
-            break;
-        }
-    }
-    if (next_proc == -1) {
-        current = 0;
-        while (1) {
-            putChar('x');
-            waitForInterrupt();
-        }
-    }
-    */
+void IDLE() {
+    asm volatile("sti");
+    asm volatile("hlt");
+    assert(0);
+    // waitForInterrupt();
+}
 
+void _switch_ip() { ; }
+void schedule() {
+    // move current process to the end of list
+    if (pcb_cur != -1) {
+        int i = pcb[pcb_cur].next;
+        if (i != -1) {
+            pcb[pcb_cur].next = -1;
+            pcb_head = i;
+            while (pcb[i].next != -1) {
+                i = pcb[i].next;
+            }
+            pcb[i].next = pcb_cur;
+        }
+    }
+
+    // find next RUNNABLE process
     int pcb_pre = pcb_cur;
     pcb_cur = -1;
     int i = pcb_head;
-    // find next RUNNABLE process
     while (i != -1) {
         if (pcb[i].state == RUNNABLE) {
             pcb[i].state = RUNNING;
@@ -39,44 +42,51 @@ void schedule() {
     if (pcb_pre != -1 && pcb_pre == pcb_cur) {  // running process not change
         return;
     }
- assert(0);
- /*
-    if (pcb_pre != -1) {  // save pcb_pre state
-        asm volatile(
-            "pushfl;"
-            "pushal;"
-            "movl %%ebp, %[prebp];"
-            "movl %%esp, %[presp];"
-            "movl $1f, %[preip];"
-            : [presp] "=m"(pcb[pcb_pre].sp), [preip] "=m"(pcb[pcb_pre].ip),
-              [prebp] "=m"(pcb[pcb_pre].bp)
-            :
-            : "memory");
-    }
-    if (pcb_cur != -1) {  // restore pnext state
-        // set gdt, tss for proc
-        gdt[SEG_KSTACK] = SEG(STA_W, pcb_cur * sizeof(struct ProcessTable),
-                              0xffffffff, DPL_KERN);
-        asm volatile("movw %%ax, %%ss;" ::"a"(KSEL(SEG_KSTACK)));
-        gdt[SEG_UCODE] =
-            SEG(STA_X | STA_R, pcb_cur * MAX_PROC_MSZ, 0xffffffff, DPL_USER);
-        gdt[SEG_UDATA] =
-            SEG(STA_W, pcb_cur * MAX_PROC_MSZ, 0xffffffff, DPL_USER);
-        asm volatile(
-            "movl %[cursp], %%esp;"  // switch stack
-            "movl %[curbp], %%ebp;"
-            "pushl %[curip];"
-            "jmp _switch_ip;"  // set eip to curip
-            "1:"               // switch to next proc
-            "popal;"
-            "popfl;"
-            :
-            : [cursp] "m"(pcb[pcb_cur].sp), [curip] "m"(pcb[pcb_cur].ip),
-              [curbp] "m"(pcb[pcb_cur].bp)
-            : "memory");
-    } else {  // idle thread
+
+    if (pcb_cur != -1) {
+        putChar('t');
+        asm volatile("movl %0, %%esp":: "r"(&pcb[pcb_cur].tf.eip));
+        asm volatile("iret"); // return to user space
+    } else {
         IDLE();
     }
+    /*
+        if (pcb_pre != -1) {  // save pcb_pre state
+            asm volatile(
+                "pushfl;"
+                "pushal;"
+                "movl %%ebp, %[prebp];"
+                "movl %%esp, %[presp];"
+                "movl $1f, %[preip];"
+                : [presp] "=m"(pcb[pcb_pre].sp), [preip] "=m"(pcb[pcb_pre].ip),
+                  [prebp] "=m"(pcb[pcb_pre].bp)
+                :
+                : "memory");
+        }
+        if (pcb_cur != -1) {  // restore pnext state
+            // set gdt, tss for proc
+            gdt[SEG_KSTAK] = SEG(STA_W, pcb_cur * sizeof(struct ProcessTable),
+                                 0xffffffff, DPL_KERN);
+            asm volatile("movw %%ax, %%ss;" ::"a"(KSEL(SEG_KSTAK)));
+            gdt[SEG_UCODE] =
+                SEG(STA_X | STA_R, pcb_cur * PROC_MEMSZ, 0xffffffff, DPL_USER);
+            gdt[SEG_UDATA] = SEG(STA_W, pcb_cur * PROC_MEMSZ, 0xffffffff,
+       DPL_USER);
+            asm volatile(
+                "movl %[cursp], %%esp;"  // switch stack
+                "movl %[curbp], %%ebp;"
+                "pushl %[curip];"
+                "jmp _switch_ip;"  // set eip to curip
+                "1:"               // switch to next proc
+                "popal;"
+                "popfl;"
+                :
+                : [cursp] "m"(pcb[pcb_cur].sp), [curip] "m"(pcb[pcb_cur].ip),
+                  [curbp] "m"(pcb[pcb_cur].bp)
+                : "memory");
+        } else {  // idle thread
+            IDLE();
+        }
     */
 }
 
@@ -120,18 +130,18 @@ void init_pcb() {
 void enter_proc(uint32_t entry) {
     int ni = new_pcb();
     pcb_cur = ni;
-/*
-    cur_pcb_num = 0;
-    current = 0;
-    cur_pcb_num++;
-    int i = cur_pcb_num;
-    pcb[i].state = RUNNABLE;
-    pcb[i].timeCount = TIMESLICE;
-    pcb[i].sleepTime = 0;
-    pcb[i].pid = PID_START + i;
-    // ni should be 0
-    ni = 0;
-*/
+    /*
+        cur_pcb_num = 0;
+        current = 0;
+        cur_pcb_num++;
+        int i = cur_pcb_num;
+        pcb[i].state = RUNNABLE;
+        pcb[i].timeCount = TIMESLICE;
+        pcb[i].sleepTime = 0;
+        pcb[i].pid = PID_START + i;
+        // ni should be 0
+        ni = 0;
+    */
 
     asm volatile("movl %0, %%eax" ::"r"(USEL(SEG_UDATA)));
     asm volatile("movw %ax, %ds");

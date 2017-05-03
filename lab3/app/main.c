@@ -25,7 +25,11 @@ int uEntry(void) {
 	printf("Test end!!! Good luck!!!\n");
 
 	while(1) {
-		//sleep(10);
+		sleep(5);
+		double f = 1.1;
+		for(int i = 0; i < 1000000; i++) {
+			f = f * 1.1;
+		}
 	}
 	return 0;
 }
