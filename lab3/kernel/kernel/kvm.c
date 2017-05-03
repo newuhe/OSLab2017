@@ -42,7 +42,7 @@ void initSeg() {
 	 */
 	// asm volatile("movl %%esp, %0": "=r"(tss.esp0));
 	//tss.esp0 = 0x200000;   // set kernel esp to 0x200,000
-	tss.esp0 = 0x200000;   // set kernel esp to 0x200,000
+	tss.esp0 = (uint32_t)&pcb[0].stack[KERNEL_STACK_SIZE];
 	tss.ss0  = KSEL(SEG_KDATA);
 	asm volatile("ltr %%ax":: "a" (KSEL(SEG_TSS)));
 
@@ -72,7 +72,7 @@ void enterUserSpace(uint32_t entry) {
 	 */
 	asm volatile("sti");
 	asm volatile("pushl %0":: "r"(USEL(SEG_UDATA)));	// %ss
-	asm volatile("pushl %0":: "r"(128 << 20));			// %esp 128MB
+	asm volatile("pushl %0":: "r"(64 << 20));			// %esp 128MB
 	asm volatile("pushfl");								// %eflags
 	asm volatile("pushl %0":: "r"(USEL(SEG_UCODE)));	// %cs
 	asm volatile("pushl %0":: "r"(entry));				// %eip
@@ -121,6 +121,14 @@ void loadUMain(void) {
 		ph++;
 	}
 
-	init_pcb(elf->entry);
-	//enterUserSpace(elf->entry);
+
+    int src = 0x200000,
+        dst = 0x200000 + 0x100000;
+    for (int i = 0; i < 0x100000; i++) {
+        *((uint8_t *)dst + i) = *((uint8_t *)src + i);
+    }
+
+	init_pcb();
+	enter_proc(elf->entry);
+	// enterUserSpace(elf->entry);
 }

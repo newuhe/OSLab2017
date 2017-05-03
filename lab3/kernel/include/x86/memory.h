@@ -29,13 +29,6 @@
 #define KSEL(desc) (((desc) << 3) | DPL_KERN)
 #define USEL(desc) (((desc) << 3) | DPL_USER)
 
-// process state
-#define P_NEW      0
-#define P_RUNNABLE 1
-#define P_RUNNING  2
-#define P_BLOCKED  3
-#define P_DEAD     4
-
 struct GateDescriptor {
 	uint32_t offset_15_0      : 16;
 	uint32_t segment          : 16;

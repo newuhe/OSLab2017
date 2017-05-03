@@ -125,7 +125,7 @@ void exit() {
 	syscall(SYS_exit, 1, 1, 1);
 }
 
-void sleep(int time) {
+void sleep(int time_) {
 	// TODO:
-	syscall(SYS_sleep, time, 1, 1);
+	syscall(SYS_sleep, time_, 1, 1);
 }
