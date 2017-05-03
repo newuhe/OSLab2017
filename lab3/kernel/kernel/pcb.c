@@ -5,6 +5,16 @@ extern SegDesc gdt[NR_SEGMENTS];
 extern TSS tss;
 
 void IDLE() {
+//    gdt[SEG_KSTAK] = SEG(STA_W, 0, 0xffffffff, DPL_KERN);
+//    asm volatile("movw %%ax, %%ss;" ::"a"(KSEL(SEG_KSTAK)));
+//    asm volatile(
+//        "movl %0, %%esp;"  // swith to idle proc stack
+//        "movl %0, %%ebp;"
+//        "sti;"
+//        "hlt;"
+//        :
+//        : "i"(128<<20));
+
     asm volatile("sti");
     asm volatile("hlt");
     assert(0);
@@ -45,7 +55,6 @@ void schedule() {
     }
 
     if (pcb_cur != -1) {
-
         // modify tss
         tss.esp0 = (uint32_t)&pcb[pcb_cur].stack[KERNEL_STACK_SIZE];
         tss.ss0 = KSEL(SEG_KDATA);
@@ -70,9 +79,7 @@ void schedule() {
             "addl $4, %esp");  // interrupt vector is on top of kernel stack
         asm volatile("addl $4, %esp");  // error code is on top of kernel stack
 
-
-
-        asm volatile("iret");           // return to user space
+        asm volatile("iret");  // return to user space
     } else {
         IDLE();
     }

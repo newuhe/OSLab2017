@@ -48,6 +48,32 @@ void irqHandle(struct TrapFrame *tf) {
 
 void sys_exit(struct TrapFrame *tf) {
     // TODO:
+    uint32_t pid = pcb[pcb_cur].pid;
+    if (pcb_head == -1) {
+        return;
+    }
+    if (pcb[pcb_head].pid == pid) {
+        int t = pcb_head;
+        pcb_head = pcb[pcb_head].next;
+        pcb[t].next = pcb_free;
+        pcb_free = t;
+    } else {
+        int p = pcb_head, i = pcb[pcb_head].next;
+        while (i != -1) {
+            if (pcb[i].pid == pid) {
+                pcb[p].next = pcb[i].next;
+                pcb[i].next = pcb_free;
+                pcb_free = i;
+                break;
+            }
+            p = i;
+            i = pcb[i].next;
+        }
+    }
+    if (pcb[pcb_cur].pid == pid) {
+        pcb_cur = -1;
+        schedule();
+    }
 }
 
 void sys_fork(struct TrapFrame *tf) {
@@ -89,7 +115,7 @@ void sys_write(struct TrapFrame *tf) {
     char c = '\0';
     // ebx:file-descriptor, ecx:str, edx:len
 
-	// TODO:
+    // TODO:
     tf->ecx += (pcb_cur * PROC_MEMSZ);
 
     if (tf->ebx == 1 || tf->ebx == 2) {  // stdout & stderr
