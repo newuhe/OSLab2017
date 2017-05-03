@@ -1,7 +1,14 @@
 #include "lib.h"
 #include "types.h"
+// clang-format off
+
+int data = 0;
 
 int uEntry(void) {
+	int ret = fork();
+	printf("\n--%d--\n", ret);
+	while(1);
+	/*
 	printf("printf test begin...\n");
 	printf("the answer should be:\n");
 	printf("#######################################################\n");
@@ -24,12 +31,22 @@ int uEntry(void) {
 	printf("=======================================================\n");
 	printf("Test end!!! Good luck!!!\n");
 
-	while(1) {
-		sleep(5);
-		double f = 1.1;
-		for(int i = 0; i < 1000000; i++) {
-			f = f * 1.1;
-		}
-	}
-	return 0;
+    // clang-format on
+
+    int ret = fork();
+    if (ret == 0) {
+        printf("Child Process: Pong %d, %d;\n", data);
+    } else if (ret != -1) {
+        printf("Father Process: Ping %d, %d;\n", data);
+    }
+
+    while (1) {
+        sleep(5);
+        double f = 1.1;
+        for (int i = 0; i < 1000000; i++) {
+            f = f * 1.1;
+        }
+    }
+	*/
+    return 0;
 }

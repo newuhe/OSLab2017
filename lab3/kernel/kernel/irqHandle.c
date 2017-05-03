@@ -52,6 +52,26 @@ void sys_exit(struct TrapFrame *tf) {
 
 void sys_fork(struct TrapFrame *tf) {
     // TODO:
+    int pi = new_pcb();
+
+    // copy user space memory
+    int src = APP_MEM_START + pcb_cur * PROC_MEMSZ,
+        dst = APP_MEM_START + pi * PROC_MEMSZ;
+    for (int i = 0; i < PROC_MEMSZ / 4; i++) {
+        *((uint32_t *)dst + i) = *((uint32_t *)src + i);
+    }
+
+    // copy kernel stack
+    for (int i = 0; i < KERNEL_STACK_SIZE; i++) {
+        pcb[pi].stack[i] = pcb[pcb_cur].stack[i];
+    }
+
+    pcb[pi].tf.eax = 0;                 // child process
+    pcb[pcb_cur].tf.eax = pcb[pi].pid;  // father process
+
+    pcb[pcb_cur].state = RUNNABLE;
+
+    schedule();
 }
 
 void sys_sleep(struct TrapFrame *tf) {
@@ -69,7 +89,8 @@ void sys_write(struct TrapFrame *tf) {
     char c = '\0';
     // ebx:file-descriptor, ecx:str, edx:len
 
-    // TODO: tf->ecx += 0x100000;
+	// TODO:
+    tf->ecx += (pcb_cur * PROC_MEMSZ);
 
     if (tf->ebx == 1 || tf->ebx == 2) {  // stdout & stderr
         int i;
@@ -117,16 +138,16 @@ void syscallHandle(struct TrapFrame *tf) {
 }
 
 void timerInterruptHandle(struct TrapFrame *tf) {
-	//putChar('.');
+    // putChar('.');
 
     if (pcb_cur == -1) {
-		// IDLE procedure
+        // IDLE procedure
         putChar('~');
     } else {
         putChar('0' + pcb[pcb_cur].pid - PID_START);
     }
 
-	// reduce slepp time
+    // reduce slepp time
     int i = pcb_head;
     while (i != -1) {
         if (pcb[i].sleepTime > 0) {
@@ -147,7 +168,7 @@ void timerInterruptHandle(struct TrapFrame *tf) {
     if (pcb[pcb_cur].timeCount == 0) {
         pcb[pcb_cur].timeCount = TIMESLICE;
         pcb[pcb_cur].state = RUNNABLE;
-		putChar('x');
+        putChar('x');
         schedule();
     }
 }

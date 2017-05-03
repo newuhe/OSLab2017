@@ -2,6 +2,7 @@
 #include "x86.h"
 
 extern SegDesc gdt[NR_SEGMENTS];
+extern TSS tss;
 
 void IDLE() {
     asm volatile("sti");
@@ -44,9 +45,34 @@ void schedule() {
     }
 
     if (pcb_cur != -1) {
-        putChar('t');
-        asm volatile("movl %0, %%esp":: "r"(&pcb[pcb_cur].tf.eip));
-        asm volatile("iret"); // return to user space
+
+        // modify tss
+        tss.esp0 = (uint32_t)&pcb[pcb_cur].stack[KERNEL_STACK_SIZE];
+        tss.ss0 = KSEL(SEG_KDATA);
+
+        // modify stack register
+        gdt[SEG_UCODE] =
+            SEG(STA_X | STA_R, pcb_cur * PROC_MEMSZ, 0xffffffff, DPL_USER);
+        gdt[SEG_UDATA] = SEG(STA_W, pcb_cur * PROC_MEMSZ, 0xffffffff, DPL_USER);
+        asm volatile("pushl %eax");
+        asm volatile("movl %0, %%eax" ::"r"(USEL(SEG_UDATA)));
+        asm volatile("movw %ax, %ds");
+        asm volatile("movw %ax, %es");
+        asm volatile("popl %eax");
+
+        asm volatile("movl %0, %%esp" ::"r"(&pcb[pcb_cur].tf));
+        asm volatile("popl %gs");
+        asm volatile("popl %fs");
+        asm volatile("popl %es");
+        asm volatile("popl %ds");
+        asm volatile("popal");
+        asm volatile(
+            "addl $4, %esp");  // interrupt vector is on top of kernel stack
+        asm volatile("addl $4, %esp");  // error code is on top of kernel stack
+
+
+
+        asm volatile("iret");           // return to user space
     } else {
         IDLE();
     }
@@ -152,7 +178,7 @@ void enter_proc(uint32_t entry) {
 
     current = &pcb[ni];
     current->tf.ss = USEL(SEG_UDATA);
-    current->tf.esp = 64 << 20;
+    current->tf.esp = APP_MEM_START + PROC_MEMSZ;
 
     asm volatile("pushfl");  // %eflags
     asm volatile("movl (%%esp), %0" : "=r"(current->tf.eflags) :);
