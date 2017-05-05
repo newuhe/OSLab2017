@@ -6,7 +6,13 @@
 #define	SYS_exit	1
 #define	SYS_fork	2
 #define	SYS_write	4
-#define SYS_sleep	200 // user defined
+
+// user defined
+#define SYS_sleep       200
+#define SYS_sem_init    201
+#define SYS_sem_post    202
+#define SYS_sem_wait    203
+#define SYS_sem_destroy 204
 
 /*
  * io lib here
@@ -128,4 +134,20 @@ void exit() {
 void sleep(int time_) {
 	// TODO:
 	syscall(SYS_sleep, time_, 1, 1);
+}
+
+int sem_init(sem_t *sem, unsigned int value) {
+	return syscall(SYS_sem_init, (uint32_t)sem, value, 1);
+}
+
+int sem_post(sem_t *sem) {
+	return syscall(SYS_sem_post, (uint32_t)sem, 1, 1);
+}
+
+int sem_wait(sem_t *sem) {
+	return syscall(SYS_sem_wait, (uint32_t)sem, 1, 1);
+}
+
+int sem_destroy(sem_t *sem) {
+	return syscall(SYS_sem_destroy, (uint32_t)sem, 1, 1);
 }

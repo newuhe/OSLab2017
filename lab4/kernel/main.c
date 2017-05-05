@@ -10,6 +10,7 @@ void kEntry(void) {
     initSeg();     // initialize gdt, tss
     init_pcb();    // initialize process table
     init_vga();    // clear screen
+    init_semaphore();
     loadUMain();   // load user program, enter user space
 
     while (1)

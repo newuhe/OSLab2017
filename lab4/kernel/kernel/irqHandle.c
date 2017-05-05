@@ -5,7 +5,13 @@
 #define SYS_exit 1
 #define SYS_fork 2
 #define SYS_write 4
-#define SYS_sleep 200  // user defined
+
+// user defined
+#define SYS_sleep       200
+#define SYS_sem_init    201
+#define SYS_sem_post    202
+#define SYS_sem_wait    203
+#define SYS_sem_destroy 204
 
 void schedule();
 
@@ -116,7 +122,7 @@ void sys_write(struct TrapFrame *tf) {
     char c = '\0';
 
     // !!! must add offset !!!
-    tf->ecx += ((pcb_cur - pcb) * PROC_MEMSZ);
+    tf->ecx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
 
     // ebx:file-descriptor, ecx:str, edx:len
     if (tf->ebx == 1 || tf->ebx == 2) {  // stdout & stderr
@@ -141,6 +147,54 @@ void sys_write(struct TrapFrame *tf) {
     }
 }
 
+// ebx: *sem  ecx: value
+void sys_sem_init(struct TrapFrame *tf) {
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+    sem_t *sem = (sem_t*)tf->ebx;
+    int value = tf->ecx;
+
+    int i = new_semaphore();
+    semaphore[i].value = value;
+    *sem = i;
+    tf->eax = i;
+}
+
+// ebx: *sem
+void sys_sem_post(struct TrapFrame *tf) {
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+    sem_t sem = *(sem_t*)tf->ebx;
+    semaphore[sem].value++;
+    if (semaphore[sem].value == 0) {
+        int pid = semaphore[sem].pid;
+        assert(pid == 1);
+        pcb[pid].state = RUNNABLE;
+        pcb[pid].timeCount = TIMESLICE;
+        schedule();
+    }
+    tf->eax = 0;
+}
+
+// ebx: *sem
+void sys_sem_wait(struct TrapFrame *tf) {
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+    sem_t sem = *(sem_t*)tf->ebx;
+    semaphore[sem].value--;
+    tf->eax = 0;
+    if (semaphore[sem].value < 0) {
+        semaphore[sem].pid = NR_PCB(pcb_cur);
+        pcb_cur->state = BLOCKED;
+        schedule();
+    }
+}
+
+// ebx: *sem
+void sys_sem_destroy(struct TrapFrame *tf) {
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+    sem_t *sem = (sem_t*)tf->ebx;
+    free_semaphore(*sem);
+    tf->eax = 0;
+}
+
 void syscallHandle(struct TrapFrame *tf) {
     /* 实现系统调用*/
     switch (tf->eax) {
@@ -155,6 +209,18 @@ void syscallHandle(struct TrapFrame *tf) {
             break;
         case SYS_sleep:
             sys_sleep(tf);
+            break;
+        case SYS_sem_init:
+            sys_sem_init(tf);
+            break;
+        case SYS_sem_post:
+            sys_sem_post(tf);
+            break;
+        case SYS_sem_wait:
+            sys_sem_wait(tf);
+            break;
+        case SYS_sem_destroy:
+            sys_sem_destroy(tf);
             break;
         /**
          * TODO: add more syscall
