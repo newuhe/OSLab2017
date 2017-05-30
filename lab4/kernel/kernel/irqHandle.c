@@ -169,6 +169,7 @@ void sys_sem_post(struct TrapFrame *tf) {
         assert(pid == 1);
         pcb[pid].state = RUNNABLE;
         pcb[pid].timeCount = TIMESLICE;
+        pcb_cur->state = RUNNABLE;
         schedule();
     }
     tf->eax = 0;
