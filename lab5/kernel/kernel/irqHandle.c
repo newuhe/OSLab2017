@@ -152,7 +152,7 @@ void sys_write(struct TrapFrame *tf) {
     } else {                // other file descriptor
         uint8_t *buf = (uint8_t *)(tf->ecx);
         int count = tf->edx;
-        my_write(FCB_list[tf->ebx].inode, buf, count, FCB_list[tf->ebx].offset);
+        fs_write(FCB_list[tf->ebx].inode, buf, count, FCB_list[tf->ebx].offset);
         FCB_list[tf->ebx].offset += count;
 
         tf->eax = count;
@@ -219,7 +219,7 @@ void sys_open(struct TrapFrame *tf) {
 
     FCB_id = allocFCB();
     FCB_list[FCB_id].offset = 0;
-    FCB_list[FCB_id].inode = my_create_file((const char *)(tf->ebx));
+    FCB_list[FCB_id].inode = fs_create_file((const char *)(tf->ebx));
 
     tf->eax = FCB_id;
 }
@@ -227,7 +227,7 @@ void sys_open(struct TrapFrame *tf) {
 void sys_read(struct TrapFrame *tf) {
     uint8_t *buf = (uint8_t *)(tf->ecx);
     int count = tf->edx;
-    my_read(FCB_list[tf->ebx].inode, buf, count, FCB_list[tf->ebx].offset);
+    fs_read(FCB_list[tf->ebx].inode, buf, count, FCB_list[tf->ebx].offset);
     FCB_list[tf->ebx].offset += count;
 
     tf->eax = count;
@@ -237,7 +237,7 @@ void sys_lseek(struct TrapFrame *tf) {
     if (tf->edx == 0)
         FCB_list[tf->ebx].offset = 0;
     else if (tf->edx == 2)
-        FCB_list[tf->ebx].offset = my_file_size("/usr/test");
+        FCB_list[tf->ebx].offset = fs_file_size("/usr/test");
     FCB_list[tf->ebx].offset += tf->ecx;
 }
 
@@ -259,7 +259,7 @@ void sys_ls(struct TrapFrame *tf) {
     video_prints((const char *)(tf->ebx));
     video_printc('\n');
 
-    my_ls((const char *)(tf->ebx));
+    fs_ls((const char *)(tf->ebx));
 }
 
 void sys_cat(struct TrapFrame *tf) {
@@ -274,7 +274,7 @@ void sys_cat(struct TrapFrame *tf) {
     video_prints((const char *)(tf->ebx));
     video_printc('\n');
 
-    my_cat((const char *)(tf->ebx));
+    fs_cat((const char *)(tf->ebx));
 }
 
 void syscallHandle(struct TrapFrame *tf) {

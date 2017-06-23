@@ -8,7 +8,7 @@ os.img:
 	@utils/formatDisk bootloader/bootloader.bin kernel/kMain.elf app/uMain.elf os.img
 	@#cat bootloader/bootloader.bin kernel/kMain.elf app/uMain.elf > os.img
 
-play: os.img
+play: clean os.img
 	$(QEMU) -serial stdio os.img
 
 debug: os.img

@@ -70,11 +70,11 @@ void loadUMain(void) {
             readSect((void*)(buf + 512 * i), i + 201);
     }
     */
-    app_file_size = my_file_size("/boot/app");
+    app_file_size = fs_file_size("/boot/app");
     prints("/boot/app file size: ");
     printd(app_file_size);
     printc('\n');
-    my_read(find_file_inode("/boot/app", NULL), buf, app_file_size, 0);
+    fs_read(find_file_inode("/boot/app", NULL), buf, app_file_size, 0);
 
     elf = (struct ELFHeader *)buf;
 
