@@ -7,6 +7,7 @@
 #include "x86/irq.h"
 #include "x86/pcb.h"
 #include "x86/semaphore.h"
+#include "x86/fs.h"
 
 void initSeg(void);
 void loadUMain(void);

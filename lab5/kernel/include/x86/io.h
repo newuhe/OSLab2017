@@ -41,6 +41,11 @@ static inline int inLong(short port) {
 	return data;
 }
 
+static inline void outLong(uint16_t port, uint32_t data) {
+    asm volatile("out %0, %1" : : "a"(data), "d"(port));
+}
+
+
 /* 读I/O端口 */
 static inline uint8_t inByte(uint16_t port) {
 	uint8_t data;

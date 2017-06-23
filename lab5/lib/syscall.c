@@ -14,6 +14,14 @@
 #define SYS_sem_wait    203
 #define SYS_sem_destroy 204
 
+#define	SYS_open	205
+#define	SYS_read	206
+#define	SYS_lseek	208
+#define	SYS_close	209
+#define	SYS_remove	210
+#define	SYS_ls	211
+#define	SYS_cat	212
+
 /*
  * io lib here
  * 库函数写在这
@@ -150,4 +158,36 @@ int sem_wait(sem_t *sem) {
 
 int sem_destroy(sem_t *sem) {
 	return syscall(SYS_sem_destroy, (uint32_t)sem, 1, 1);
+}
+
+int open(char *path, int flags) {
+	return syscall(SYS_open, (uint32_t)path, flags, 1);
+}
+
+int read(int fd, void *buffer, int size) {
+	return syscall(SYS_read, fd, (uint32_t)buffer, size);
+}
+
+int write(int fd, void *buffer, int size) {
+	return syscall(SYS_write, fd, (uint32_t)buffer, size);
+}
+
+int lseek(int fd, int offset, int whence) {
+	return syscall(SYS_lseek, fd, offset, whence);
+}
+
+int close(int fd) {
+	return syscall(SYS_close, fd, 1, 1);
+}
+
+int remove(char *path) {
+	return syscall(SYS_remove, (uint32_t)path, 1, 1);
+}
+
+void ls(char *path) {
+	syscall(SYS_ls, (uint32_t)path, 1, 1);
+}
+
+void cat(char *path) {
+	syscall(SYS_cat, (uint32_t)path, 1, 1);
 }

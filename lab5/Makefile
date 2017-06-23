@@ -4,7 +4,9 @@ os.img:
 	@cd bootloader; make
 	@cd kernel; make
 	@cd app; make
-	cat bootloader/bootloader.bin kernel/kMain.elf app/uMain.elf > os.img
+	@gcc utils/formatDisk.cpp -o utils/formatDisk
+	@utils/formatDisk bootloader/bootloader.bin kernel/kMain.elf app/uMain.elf os.img
+	@#cat bootloader/bootloader.bin kernel/kMain.elf app/uMain.elf > os.img
 
 play: os.img
 	$(QEMU) -serial stdio os.img

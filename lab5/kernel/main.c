@@ -9,6 +9,7 @@ void kEntry(void) {
     initTimer();   // iniialize 8253 timer
     initSeg();     // initialize gdt, tss
     init_pcb();    // initialize process table
+    init_fs();     // initialize file system
     init_vga();    // clear screen
     init_semaphore();
     loadUMain();   // load user program, enter user space

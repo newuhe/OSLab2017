@@ -7,11 +7,18 @@
 #define SYS_write 4
 
 // user defined
-#define SYS_sleep       200
-#define SYS_sem_init    201
-#define SYS_sem_post    202
-#define SYS_sem_wait    203
+#define SYS_sleep 200
+#define SYS_sem_init 201
+#define SYS_sem_post 202
+#define SYS_sem_wait 203
 #define SYS_sem_destroy 204
+#define SYS_open 205
+#define SYS_read 206
+#define SYS_lseek 208
+#define SYS_close 209
+#define SYS_remove 210
+#define SYS_ls 211
+#define SYS_cat 212
 
 void schedule();
 
@@ -143,14 +150,19 @@ void sys_write(struct TrapFrame *tf) {
         }
         tf->eax = tf->edx;  // return value
     } else {                // other file descriptor
-        panic("sys_write not implemented");
+        uint8_t *buf = (uint8_t *)(tf->ecx);
+        int count = tf->edx;
+        my_write(FCB_list[tf->ebx].inode, buf, count, FCB_list[tf->ebx].offset);
+        FCB_list[tf->ebx].offset += count;
+
+        tf->eax = count;
     }
 }
 
 // ebx: *sem  ecx: value
 void sys_sem_init(struct TrapFrame *tf) {
     tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
-    sem_t *sem = (sem_t*)tf->ebx;
+    sem_t *sem = (sem_t *)tf->ebx;
     int value = tf->ecx;
 
     int i = new_semaphore();
@@ -162,7 +174,7 @@ void sys_sem_init(struct TrapFrame *tf) {
 // ebx: *sem
 void sys_sem_post(struct TrapFrame *tf) {
     tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
-    sem_t sem = *(sem_t*)tf->ebx;
+    sem_t sem = *(sem_t *)tf->ebx;
     semaphore[sem].value++;
     if (semaphore[sem].value == 0) {
         int pid = semaphore[sem].pid;
@@ -178,7 +190,7 @@ void sys_sem_post(struct TrapFrame *tf) {
 // ebx: *sem
 void sys_sem_wait(struct TrapFrame *tf) {
     tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
-    sem_t sem = *(sem_t*)tf->ebx;
+    sem_t sem = *(sem_t *)tf->ebx;
     semaphore[sem].value--;
     tf->eax = 0;
     if (semaphore[sem].value < 0) {
@@ -191,9 +203,78 @@ void sys_sem_wait(struct TrapFrame *tf) {
 // ebx: *sem
 void sys_sem_destroy(struct TrapFrame *tf) {
     tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
-    sem_t *sem = (sem_t*)tf->ebx;
+    sem_t *sem = (sem_t *)tf->ebx;
     free_semaphore(*sem);
     tf->eax = 0;
+}
+
+void sys_open(struct TrapFrame *tf) {
+    // !!! must add offset !!!
+    int FCB_id;
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+
+    prints("[kernel] open ");
+    prints((const char *)(tf->ebx));
+    printc('\n');
+
+    FCB_id = allocFCB();
+    FCB_list[FCB_id].offset = 0;
+    FCB_list[FCB_id].inode = my_create_file((const char *)(tf->ebx));
+
+    tf->eax = FCB_id;
+}
+
+void sys_read(struct TrapFrame *tf) {
+    uint8_t *buf = (uint8_t *)(tf->ecx);
+    int count = tf->edx;
+    my_read(FCB_list[tf->ebx].inode, buf, count, FCB_list[tf->ebx].offset);
+    FCB_list[tf->ebx].offset += count;
+
+    tf->eax = count;
+}
+
+void sys_lseek(struct TrapFrame *tf) {
+    if (tf->edx == 0)
+        FCB_list[tf->ebx].offset = 0;
+    else if (tf->edx == 2)
+        FCB_list[tf->ebx].offset = my_file_size("/usr/test");
+    FCB_list[tf->ebx].offset += tf->ecx;
+}
+
+void sys_close(struct TrapFrame *tf) { freeFCB(tf->ebx); }
+
+void sys_remove(struct TrapFrame *tf) {
+    // not implemented
+}
+
+void sys_ls(struct TrapFrame *tf) {
+    // !!! must add offset !!!
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+
+    prints("[kernel] ls ");
+    prints((const char *)(tf->ebx));
+    printc('\n');
+
+    video_prints("[kernel] ls ");
+    video_prints((const char *)(tf->ebx));
+    video_printc('\n');
+
+    my_ls((const char *)(tf->ebx));
+}
+
+void sys_cat(struct TrapFrame *tf) {
+    // !!! must add offset !!!
+    tf->ebx += (NR_PCB(pcb_cur) * PROC_MEMSZ);
+
+    prints("[kernel] cat ");
+    prints((const char *)(tf->ebx));
+    printc('\n');
+
+    video_prints("[kernel] cat ");
+    video_prints((const char *)(tf->ebx));
+    video_printc('\n');
+
+    my_cat((const char *)(tf->ebx));
 }
 
 void syscallHandle(struct TrapFrame *tf) {
@@ -223,6 +304,27 @@ void syscallHandle(struct TrapFrame *tf) {
         case SYS_sem_destroy:
             sys_sem_destroy(tf);
             break;
+        case SYS_open:
+            sys_open(tf);
+            break;
+        case SYS_read:
+            sys_read(tf);
+            break;
+        case SYS_lseek:
+            sys_lseek(tf);
+            break;
+        case SYS_close:
+            sys_close(tf);
+            break;
+        case SYS_remove:
+            sys_remove(tf);
+            break;
+        case SYS_ls:
+            sys_ls(tf);
+            break;
+        case SYS_cat:
+            sys_cat(tf);
+            break;
         /**
          * TODO: add more syscall
          */
@@ -233,7 +335,7 @@ void syscallHandle(struct TrapFrame *tf) {
 
 void timerInterruptHandle(struct TrapFrame *tf) {
     // putChar('.');
-
+return;
     struct ProcessTable *p = pcb_head;
     while (p != NULL) {
         if (p->sleepTime > 0) {
